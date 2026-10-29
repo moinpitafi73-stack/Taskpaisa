@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskPaisa — Earn by Tasks</title>
+<style>
+:root{--navy:#14213d;--blue:#2563eb;--green:#16a34a;--bg:#f4f7fb;--muted:#64748b}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:#172033}
+header{background:linear-gradient(120deg,#14213d,#2563eb);color:white;padding:26px 18px}
+.wrap{max-width:1050px;margin:auto}nav{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.logo{font-size:1.45rem;font-weight:850;letter-spacing:-.5px}.logo span{color:#86efac}
+.pill{border:1px solid #ffffff55;border-radius:99px;padding:8px 12px;font-size:.85rem}
+.hero{padding:35px 0 24px;max-width:720px}.hero h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;margin:0 0 14px}.hero p{color:#e0eaff;line-height:1.6;margin:0}
+main{padding:22px 18px 45px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.stat,.panel,.task{background:white;border:1px solid #e5eaf2;border-radius:17px;padding:18px;box-shadow:0 4px 18px #17203308}
+.stat small{color:var(--muted)}.stat strong{display:block;font-size:1.65rem;margin-top:7px}
+.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:24px 0 14px}.sectionhead h2{margin:0;font-size:1.35rem}.sectionhead p{margin:5px 0 0;color:var(--muted);font-size:.92rem}
+.tasks{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.task{display:flex;flex-direction:column;gap:10px}.taskicon{width:44px;height:44px;border-radius:13px;background:#eff6ff;display:grid;place-items:center;font-size:1.35rem}
+.task h3{margin:0;font-size:1.05rem}.task p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.5;flex:1}.reward{font-weight:800;color:var(--green)}
+button{border:0;border-radius:10px;background:var(--blue);color:white;font-weight:700;padding:11px 14px;cursor:pointer;font-size:.93rem}button:hover{filter:brightness(.95)}button:disabled{background:#94a3b8;cursor:not-allowed}
+.secondary{background:#eaf0ff;color:#1d4ed8}.danger{background:#fee2e2;color:#991b1b}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.muted{color:var(--muted);font-size:.9rem}.notice{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:14px;line-height:1.5;margin-top:20px;font-size:.9rem}
+#activity{margin-top:12px}.activityitem{padding:12px 0;border-bottom:1px solid #edf0f5;display:flex;justify-content:space-between;gap:12px}.activityitem:last-child{border-bottom:0}
+footer{text-align:center;color:var(--muted);padding:24px 18px;font-size:.85rem}
+@media(max-width:760px){.tasks{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.hero{padding-top:26px}.stat{padding:14px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<nav><div class="logo">Task<span>Paisa</span></div><div class="pill">Free demo · Version 1.0</div></nav>
+<div class="hero"><h1>Chhote tasks.<br>Smart start.</h1><p>Tasks explore karein, demo points collect karein aur apni activity track karein. Yeh starter demo hai — abhi real cash payout ya online accounts enabled nahi hain.</p></div>
+</div></header>
+<main class="wrap">
+<div class="stats">
+  <div class="stat"><small>Available demo points</small><strong id="points">0 pts</strong></div>
+  <div class="stat"><small>Completed tasks</small><strong id="completed">0</strong></div>
+  <div class="stat"><small>Tasks available</small><strong id="available">4</strong></div>
+</div>
+<div class="sectionhead"><div><h2>Available tasks</h2><p>Har task ko sirf ek martaba complete kiya ja sakta hai.</p></div><button class="secondary" id="reset">Reset demo</button></div>
+<div class="tasks" id="tasks"></div>
+<div class="sectionhead"><div><h2>Recent activity</h2><p>Aapke demo actions yahan nazar aayenge.</p></div></div>
+<div class="panel" id="activity"><p class="muted">Abhi koi task complete nahi hua.</p></div>
+<div class="notice"><strong>Important:</strong> Points filhal sirf demo points hain, cash nahi. Real earning launch karne se pehle sponsor/affiliate income source, secure server-side task verification, privacy policy, terms, anti-fraud controls aur payout budget zaroori hain. Kisi user se registration fee ya deposit na lein.</div>
+</main>
+<footer>© <span id="year"></span> TaskPaisa · Built as a free starter prototype</footer>
+<script>
+const tasks = [
+ {id:"quiz",icon:"🧠",title:"Quick knowledge quiz",desc:"Ek chhota general-knowledge sawal jawab dein.",points:10,action:"Start quiz"},
+ {id:"read",icon:"📘",title:"Read a learning tip",desc:"Online safety ka short tip parhein aur confirm karein.",points:5,action:"Read tip"},
+ {id:"feedback",icon:"💬",title:"Give website feedback",desc:"Batayein ke website ko behtar kaise banaya ja sakta hai.",points:8,action:"Give feedback"},
+ {id:"checklist",icon:"✅",title:"Safety checklist",desc:"Online earning ke basic safety rules check karein.",points:7,action:"Open checklist"}
+];
+const key="taskpaisa_demo_v1";
+let state={points:0,done:[],activity:[]};
+try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.done))state=saved}catch(e){}
+function save(){localStorage.setItem(key,JSON.stringify(state));render()}
+function completeTask(t){
+ if(state.done.includes(t.id))return;
+ if(t.id==="quiz"){
+  const a=prompt("Quiz: Website par HTTPS ka aam maqsad kya hai?\\nA) Connection ko encrypt karna\\nB) Followers barhana\\nC) Screen ko bright karna");
+  if(a===null)return;
+  if(a.trim().toLowerCase()!=="a" && a.trim().toLowerCase()!=="https" && a.trim().toLowerCase()!=="connection ko encrypt karna"){alert("Is demo quiz mein sahi jawab A hai: connection ko encrypt karna. Dobara try karein.");return}
+ } else if(t.id==="read"){
+  alert("Safety tip: Kisi bhi earning website ko paisa jama karne ke liye kehne par ehtiyat karein. Password ya OTP kabhi share na karein.");
+ } else if(t.id==="feedback"){
+  const a=prompt("Aap website mein kya behtar dekhna chahenge?");
+  if(a===null||!a.trim())return;
+ } else if(t.id==="checklist"){
+  const a=confirm("Checklist: Kya aap samajhte hain ke points cash nahi hain aur OTP/password share nahi karna chahiye? OK to confirm.");
+  if(!a)return;
+ }
+ state.done.push(t.id);state.points+=t.points;
+ state.activity.unshift({title:t.title,points:t.points,time:new Date().toLocaleString()});
+ save();
+}
+function render(){
+ document.getElementById("points").textContent=state.points+" pts";
+ document.getElementById("completed").textContent=state.done.length;
+ document.getElementById("available").textContent=tasks.length-state.done.length;
+ document.getElementById("tasks").innerHTML=tasks.map(t=>`<article class="task"><div class="taskicon">${t.icon}</div><h3>${t.title}</h3><p>${t.desc}</p><div class="row"><span class="reward">+${t.points} pts</span><button ${state.done.includes(t.id)?"disabled":""} data-task="${t.id}">${state.done.includes(t.id)?"Completed ✓":t.action}</button></div></article>`).join("");
+ document.querySelectorAll("[data-task]").forEach(b=>b.addEventListener("click",()=>completeTask(tasks.find(t=>t.id===b.dataset.task))));
+ const box=document.getElementById("activity");
+ box.innerHTML=state.activity.length?state.activity.map(a=>`<div class="activityitem"><div><strong>${a.title}</strong><div class="muted">${a.time}</div></div><strong class="reward">+${a.points} pts</strong></div>`).join(""):'<p class="muted">Abhi koi task complete nahi hua.</p>';
+}
+document.getElementById("reset").addEventListener("click",()=>{if(confirm("Demo points aur activity reset kar dein?")){state={points:0,done:[],activity:[]};save()}});
+document.getElementById("year").textContent=new Date().getFullYear();
+render();
+</script>
+</body>
+</html>
